@@ -34,31 +34,35 @@ public partial class MainWindow : Window
     private void BuildPreviewColumns()
     {
         var g = PreviewGrid;
-        g.Columns.Add(new DataGridTextColumn
+        g.Columns.Add(new DataGridTemplateColumn
         {
-            Header = "상태", Binding = new Binding("StatusText"), Width = 90,
-            ElementStyle = TextStyle(null, b => b.Setters.Add(new Setter(TextBlock.FontWeightProperty, FontWeights.SemiBold))),
+            Header = "상태", Width = new DataGridLength(128), CellTemplate = (DataTemplate)FindResource("StatusChipTemplate"),
         });
-        g.Columns.Add(new DataGridTextColumn { Header = "사번", Binding = new Binding("EmpNo"), Width = new DataGridLength(110), ElementStyle = TextStyle(null, null) });
-        g.Columns.Add(new DataGridTextColumn { Header = "성명", Binding = new Binding("Name"), Width = new DataGridLength(90), ElementStyle = TextStyle(null, null) });
+        g.Columns.Add(new DataGridTextColumn { Header = "사번", Binding = new Binding("EmpNo"), Width = new DataGridLength(100), ElementStyle = TextStyle(null, null) });
+        g.Columns.Add(new DataGridTextColumn { Header = "성명", Binding = new Binding("Name"), Width = new DataGridLength(76), ElementStyle = TextStyle(null, null) });
 
+        var baseCell = (Style)FindResource(typeof(DataGridCell));
         for (var i = 0; i < FieldInfo.All.Length; i++)
         {
             var path = $"Cells[{i}]";
-            var cell = new Style(typeof(DataGridCell));
-            cell.Triggers.Add(StateTrigger(path + ".State", "NeedsCheck", new SolidColorBrush(Color.FromRgb(0xFF, 0xF1, 0xBF))));
-            cell.Triggers.Add(StateTrigger(path + ".State", "Empty", new SolidColorBrush(Color.FromRgb(0xF3, 0xF4, 0xF6))));
+            var cell = new Style(typeof(DataGridCell), baseCell);
+            cell.Triggers.Add(StateTrigger(path + ".State", "NeedsCheck", (Brush)FindResource("SupportSoftBrush")));
+            cell.Triggers.Add(StateTrigger(path + ".State", "Empty", (Brush)FindResource("NeutralCellBrush")));
             g.Columns.Add(new DataGridTextColumn
             {
-                Header = FieldInfo.Label(FieldInfo.All[i]),
+                Header = HeaderText(FieldInfo.Label(FieldInfo.All[i])),
                 Binding = new Binding(path + ".Text"),
                 Width = new DataGridLength(1, DataGridLengthUnitType.Star),
-                MinWidth = 82,
+                MinWidth = 76,
                 CellStyle = cell,
                 ElementStyle = TextStyle(path, null),
             });
         }
     }
+
+    /// <summary>열 머리글이 좁을 때 잘리지 않도록 '…정산'은 두 줄로 나눈다.</summary>
+    private static string HeaderText(string label) =>
+        label.EndsWith("정산") ? label[..^2] + "\n정산" : label;
 
     private static DataTrigger StateTrigger(string binding, string value, Brush bg)
     {
@@ -67,15 +71,15 @@ public partial class MainWindow : Window
         return t;
     }
 
-    private static Style TextStyle(string? cellPath, Action<Style>? extra)
+    private Style TextStyle(string? cellPath, Action<Style>? extra)
     {
         var s = new Style(typeof(TextBlock));
-        s.Setters.Add(new Setter(FrameworkElement.MarginProperty, new Thickness(6, 3, 6, 3)));
+        s.Setters.Add(new Setter(FrameworkElement.MarginProperty, new Thickness(6, 0, 6, 0)));
         if (cellPath != null)
         {
             s.Setters.Add(new Setter(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Right));
             var neg = new DataTrigger { Binding = new Binding(cellPath + ".IsNegative"), Value = true };
-            neg.Setters.Add(new Setter(TextBlock.ForegroundProperty, Brushes.Firebrick));
+            neg.Setters.Add(new Setter(TextBlock.ForegroundProperty, (Brush)FindResource("DangerDarkBrush")));
             s.Triggers.Add(neg);
         }
         extra?.Invoke(s);

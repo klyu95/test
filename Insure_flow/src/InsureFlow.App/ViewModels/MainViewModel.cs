@@ -179,7 +179,7 @@ public sealed class MainViewModel : ObservableBase
                 return;
             }
             slot.Path = path;
-            slot.Status = "✔ 파일 형식 확인됨";
+            slot.Status = "파일 형식 확인됨";
             slot.IsOk = true;
             _processor = null; _result = null;
             Refresh();
