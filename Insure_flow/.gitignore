@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+publish/
+*.user
+
+# 개인정보(주민번호 등)가 포함된 샘플/산출 엑셀은 커밋 금지
+docs/*.xls
+docs/*.xlsx
+out/
